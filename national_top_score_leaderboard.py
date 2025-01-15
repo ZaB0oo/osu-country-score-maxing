@@ -73,7 +73,7 @@ def main():
 
 def loadData():
     beatmaps = []
-    with open("b5kctx_v2.csv", encoding="utf-8") as file: # 2025/01/13 21:50:00
+    with open("beatmaps.csv", encoding="utf-8") as file:
         reader = DictReader(file)
         for row in reader:
             beatmaps.append({

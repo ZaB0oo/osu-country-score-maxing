@@ -41,9 +41,9 @@ def main():
                 total_diff_filtered += 1
                 try:
                     time.sleep(1)
-                    scores = api.beatmap_scores(beatmap["id"], mode="osu", limit=100)
+                    scores = api.beatmap_scores(beatmap["beatmap_id"], mode="osu", limit=100)
                 except Exception as e:
-                    print(f"Erreur lors de la récupération des scores de la beatmap {beatmap["id"]} : {e}")
+                    print(f"Erreur lors de la récupération des scores de la beatmap {beatmap['beatmap_id']} : {e}")
                     continue
 
                 if not scores.scores:
@@ -63,7 +63,7 @@ def main():
                             total_difference += difference
                             add_beatmap(beatmap, difference, total_added)
                     except Exception as e:
-                        print(f"Erreur lors de la comparaison des scores de la beatmap {beatmap["id"]} : {e}")
+                        print(f"Erreur lors de la comparaison des scores de la beatmap {beatmap['beatmap_id']} : {e}")
                     continue
 
                 best_french_score = max(french_scores, key=lambda x: x.classic_total_score)
@@ -74,9 +74,9 @@ def main():
                         total_difference += difference
                         add_beatmap(beatmap, difference, total_added)
                 except Exception as e:
-                    print(f"Erreur lors de la comparaison des scores de la beatmap {beatmap["id"]} : {e}")
+                    print(f"Erreur lors de la comparaison des scores de la beatmap {beatmap['beatmap_id']} : {e}")
         except Exception as e:
-            print(f"Erreur lors de l'analyse de la beatmap {beatmap["id"]} : {e}")
+            print(f"Erreur lors de l'analyse de la beatmap {beatmap['beatmap_id']} : {e}")
 
     try:
         with open(f"results.txt", "a") as f:
@@ -87,26 +87,26 @@ def main():
     except Exception as e:
         print(f"Erreur lors de l'écriture du fichier récapitulatif : {e}")
 
-def loadData(file_path="b5kctx.csv"): # Mettre à jour le fichier régulièrement pour avoir les dernières beatmaps
+def loadData(file_path="beatmaps.csv"):
     beatmaps = []
     with open(file_path, encoding="utf-8") as file:
         reader = DictReader(file)
         for row in reader:
             beatmaps.append({
-                "id": int(row["beatmap_id"]),
-                "title": row["title"],
-                "diffname": row["diffname"],
-                "stars": float(row["stars"]),
-                "ranked_date": row["approved_date"],
-                "bpm": float(row["bpm"]),
-                "ar": float(row["ar"]),
-                "od": float(row["od"]),
-                "cs": float(row["cs"]),
-                "hp": float(row["hp"]),
-                "length": int(row["length"]),
-                "circles": int(row["count_circles"]),
-                "sliders": int(row["count_sliders"]),
-                "spinners": int(row["count_spinners"]),
+                'beatmap_id': int(row['beatmap_id']),
+                'title': row['title'],
+                'diffname': row['diffname'],
+                'stars': float(row['stars']),
+                'ranked_date': row['approved_date'],
+                'bpm': row['bpm'],
+                'ar': float(row['ar']),
+                'od': float(row['od']),
+                'cs': float(row['cs']),
+                'hp': float(row['hp']),
+                'length': row['length'],
+                'circles': int(row['circles']),
+                'sliders': int(row['sliders']),
+                'spinners': int(row['spinners']),
             })
     return beatmaps
 
@@ -126,10 +126,10 @@ def compare_scores(global_score, other_score, limit):
 def add_beatmap(beatmap, difference, total_added):
     try:
         with open(f"beatmaps.txt", "a") as f:
-            f.write(f"{beatmap["id"]};{beatmap["ranked_date"].strftime("%Y-%m-%d")};{beatmap["stars"]}*;{beatmap["bpm"]} BPM;{beatmap["ar"]};{beatmap["od"]};{beatmap["cs"]};{beatmap["hp"]};{beatmap["length"]};{'{:,}'.format(difference)}\n")
-        print(f"Beatmap n°{total_added} ajoutée : {beatmap["title"]} - {beatmap["id"]}")
+            f.write(f"{beatmap['beatmap_id']};{beatmap['title']} {beatmap['diffname']};{beatmap['ranked_date']};{beatmap['stars']}*;{beatmap['bpm']} BPM;{beatmap['ar']};{beatmap['od']};{beatmap['cs']};{beatmap['hp']};{beatmap['length']};{'{:,}'.format(difference)}\n")
+        print(f"Beatmap n°{total_added} ajoutée : {beatmap['title']} - {beatmap['beatmap_id']}")
     except Exception as e:
-        print(f"Erreur lors de l'écriture de la beatmap {beatmap["id"]} dans le fichier : {e}")
+        print(f"Erreur lors de l'écriture de la beatmap {beatmap['beatmap_id']} dans le fichier : {e}")
 
 if __name__ == "__main__":
     main()
