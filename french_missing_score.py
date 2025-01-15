@@ -5,7 +5,8 @@ import ossapi
 from csv import DictReader
 
 PERCENTAGE_LIMIT = 15
-QUERY = "star>3 star<8 length>100 ranked<2025"
+PROGRESS_FILE = "french_missing_score_progress.txt"
+BEATMAPS_FILE = "french_missing_score.txt"
 
 def main():
 
@@ -24,14 +25,15 @@ def main():
 
     total_diff_of_mapset_filtered, total_diff_filtered, total_added, total_difference = 0, 0, 0, 0
     try:
-        if os.path.exists(f"beatmaps.txt"):
-            os.remove(f"beatmaps.txt")
-        with open(f"beatmaps.txt", "a") as f:
+        if os.path.exists(BEATMAPS_FILE):
+            os.remove(BEATMAPS_FILE)
+        with open(BEATMAPS_FILE, "a") as f:
             f.write("Beatmap ID;Title + diffname;Date Ranked;Stars;BPM;AR;OD;CS;HP;Length;Missing score\n")
     except Exception as e:
         print(f"Erreur lors de la manipulation du fichier : {e}")
         return
     
+    start_index = loadProgress()
     beatmaps = loadData()
 
     for beatmap in beatmaps:
@@ -78,6 +80,7 @@ def main():
         except Exception as e:
             print(f"Erreur lors de l'analyse de la beatmap {beatmap['beatmap_id']} : {e}")
 
+    os.remove(PROGRESS_FILE)
     try:
         with open(f"results.txt", "a") as f:
             f.write(f"Total des beatmaps analysées : {total_diff_of_mapset_filtered}\n")
@@ -86,6 +89,14 @@ def main():
             f.write(f"Total de score manquant : {'{:,}'.format(total_difference)}\n")
     except Exception as e:
         print(f"Erreur lors de l'écriture du fichier récapitulatif : {e}")
+
+def loadProgress():
+    if os.path.exists(PROGRESS_FILE):
+        with open(PROGRESS_FILE, "r") as f:
+            lines = f.readlines()
+            start_index = int(lines[0].strip())
+            return start_index
+    return 0
 
 def loadData(file_path="beatmaps.csv"):
     beatmaps = []

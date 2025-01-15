@@ -17,6 +17,9 @@ COUNTRIES = {
     "TW": "Taiwan",
 }
 
+PROGRESS_FILE = "national_top_score_progress.txt"
+SCORES_FILE = "national_top_score_leaderboard.txt"
+
 def main():
 
     load_dotenv()
@@ -32,15 +35,12 @@ def main():
         print(f"Erreur lors de la connexion à l'API : {e}")
         return
 
-    file_path = "national_top_score_leaderboard.txt"
-    if os.path.exists(f"{file_path}"):
-        os.remove(f"{file_path}")
+    start_index, scores_by_country = loadProgress()
 
-    total = 0
-    scores_by_country = {code: 0 for code in COUNTRIES.keys()}
+    total = start_index
     beatmaps = loadData()
 
-    for beatmap in beatmaps:
+    for i, beatmap in enumerate(beatmaps[start_index:], start=start_index + 1):
         total += 1
         try:
             time.sleep(1)
@@ -63,17 +63,22 @@ def main():
         for country in COUNTRIES:
             if country not in countries_checked and scores.scores:
                 scores_by_country[country] += scores.scores[-1].classic_total_score
-        
-        # Mise à jour du fichier à chaque beatmap
-        last_beatmap_added = f"Beatmap n°{total} : {beatmap['beatmap_id']} - {beatmap['title']} ({beatmap['diffname']}) - {beatmap['approved_date']}"
-        save_scores_to_file(scores_by_country, last_beatmap_added, file_path)
 
-    for code, total_score in scores_by_country.items():
-        print(f"Total des scores pour {COUNTRIES[code]} ({code}) : {'{:,}'.format(total_score)}")
+        last_beatmap_added = f"Beatmap n°{i} : {beatmap['beatmap_id']} - {beatmap['title']} ({beatmap['diffname']}) - {beatmap['approved_date']}"
+        save_scores_to_file(scores_by_country, last_beatmap_added, SCORES_FILE)
+        save_progress(i, scores_by_country)
 
-def loadData():
+    os.remove(PROGRESS_FILE)
+    try:
+        with open(SCORES_FILE, "a") as f:
+            for code, total_score in sorted(scores_by_country.items(), key=lambda item: item[1], reverse=True):
+                f.write(f"{code};{COUNTRIES[code]};{'{:,}'.format(total_score)};\n")
+    except Exception as e:
+        print(f"Erreur lors de la mise à jour du fichier : {e}")
+
+def loadData(file_path="beatmaps.csv"):
     beatmaps = []
-    with open("beatmaps.csv", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         reader = DictReader(file)
         for row in reader:
             beatmaps.append({
@@ -84,12 +89,33 @@ def loadData():
             })
     return beatmaps
 
+
+def loadProgress():
+    if os.path.exists(PROGRESS_FILE):
+        with open(PROGRESS_FILE, "r") as f:
+            lines = f.readlines()
+            start_index = int(lines[0].strip())
+            scores_by_country = eval(lines[1])
+            return start_index, scores_by_country
+    else:
+        return 0, {code: 0 for code in COUNTRIES.keys()}
+
+
+def save_progress(index, scores_by_country):
+    try:
+        with open(PROGRESS_FILE, "w") as f:
+            f.write(f"{index}\n")
+            f.write(f"{scores_by_country}\n")
+    except Exception as e:
+        print(f"Erreur lors de la sauvegarde de la progression : {e}")
+
+
 def save_scores_to_file(scores_by_country, last_beatmap_added, file_path):
     try:
         with open(file_path, "w") as f:
             for code, total_score in scores_by_country.items():
                 f.write(f"{code};{COUNTRIES[code]};{'{:,}'.format(total_score)};\n")
-            f.write(f"\nDernière beatmap ajoutée : {last_beatmap_added}")
+            f.write(f"\n{last_beatmap_added}")
     except Exception as e:
         print(f"Erreur lors de la mise à jour du fichier : {e}")
 
