@@ -72,7 +72,7 @@ def main():
     try:
         with open(SCORES_FILE, "a") as f:
             for code, total_score in sorted(scores_by_country.items(), key=lambda item: item[1], reverse=True):
-                f.write(f"{code};{COUNTRIES[code]};{'{:,}'.format(total_score)};\n")
+                f.write(f"\n{code};{COUNTRIES[code]};{'{:,}'.format(total_score)};")
     except Exception as e:
         print(f"Erreur lors de la mise à jour du fichier : {e}")
 
